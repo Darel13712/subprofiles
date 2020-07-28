@@ -20,7 +20,7 @@ def get_items(ui_matrix, user):
 
 
 def get_user_subprofiles(items, iu_matrix, k, metric):
-    """Subprofiles for single user"""
+    """Subprofiles for a single user"""
     knn = get_knn(items, iu_matrix, k, metric)
     candidate_subprofiles = [
         {base_item for base_item in items if item in knn[base_item]}.union({item})
@@ -97,16 +97,16 @@ def collect_new_neighbors(knn, items):
 
 
 def subprofiles(ui_matrix, k=10, metric='cosine', target='old'):
+    if target not in ['new', 'both', 'old']:
+        raise ValueError(f'target must be one of "old", "new", "both", got {target}')
+
     knn = None
+    drop_old = True if target == 'new' else False
+
     if target != 'old':
         nbrs = NearestNeighbors(n_neighbors=k, metric=metric).fit(ui_matrix.T)
         knn = nbrs.kneighbors(ui_matrix.T, return_distance=False)
-    if target == 'new':
-        drop_old = True
-    elif target == 'both':
-        drop_old = False
-    else:
-        raise ValueError(f'target must be one of "old", "new", "both", got {target}')
+
     users = np.unique(ui_matrix.nonzero()[0])
     with Pool(cpu_count()) as p:
         subprofiles = p.starmap(
