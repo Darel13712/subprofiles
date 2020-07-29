@@ -6,12 +6,20 @@ def get_items(ui_matrix, user):
     return np.unique(ui_matrix[user].nonzero()[1])
 
 
+def drop_liked(sp, items):
+    items = set(items)
+    res = [s - items for s in sp]
+    res = [s for s in res if s]
+    return res
+
+
 def get_user_subprofiles(ui_matrix, user, knn, threshold):
     """Subprofiles for a single user"""
     items = get_items(ui_matrix, user)
     candidates = [knn[item] for item in items]
     candidates.sort(key=len, reverse=True)
     res = merge_subprofiles(candidates, threshold)
+    res = drop_liked(res, items)
     return res
 
 
@@ -38,7 +46,7 @@ def merge_subprofiles(candidates, threshold):
 def subprofiles(ui_matrix, knn, threshold=0.5):
     users = np.unique(ui_matrix.nonzero()[0])
     with Pool(cpu_count()) as p:
-        subprofiles = p.starmap(
+        res = p.starmap(
             get_user_subprofiles, [(ui_matrix, user, knn, threshold) for user in users],
         )
-        return dict(zip(users, subprofiles))
+        return dict(zip(users, res))
