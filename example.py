@@ -1,9 +1,10 @@
 from rs_datasets import MovieLens
 
 from subprofiles import subprofiles
-from utils import to_csr, encode
+from utils import to_csc, encode, get_knn
 
-df = MovieLens().ratings
+df = MovieLens('10m').ratings
 df, ue, ie = encode(df)
-m = to_csr(df)
-sp = subprofiles(m, target='new')
+m = to_csc(df)
+knn = get_knn(m, 10, 'cosine')
+sp = subprofiles(m, knn)
