@@ -64,14 +64,16 @@ def rerank(items, scores, subprofiles, k, lmbd=0.5):
 
 
 def user_ranking(items, scores, subprofiles, k, lmbd):
+    scores = list(scores)
     subprofile_prob = np.array([len(sp) for sp in subprofiles])
-    subprofile_prob /= sum(subprofile_prob)
+    subprofile_prob = subprofile_prob / subprofile_prob.sum()
 
     items = pd.Series(items)
     item_prob_den = np.array([sum(items.isin(sp) * scores) for sp in subprofiles])
+    items = list(items)
     not_from_subprofiles = item_prob_den == 0
     if not_from_subprofiles.any():
-        item_prob_den[not_from_subprofiles] = 1
+        item_prob_den[not_from_subprofiles] = 1 # другое число?
 
     res = []
     penalty = [1] * len(subprofiles)
@@ -94,7 +96,7 @@ def user_ranking(items, scores, subprofiles, k, lmbd):
 
 
 def diversity(item, penalty, subprofiles, subprofile_prob, item_prob):
-    div = 0
+    div = 0 # что делатль с другими айтемами?
     for i, sp in enumerate(subprofiles):
         if item in sp:
             div += subprofile_prob[i] * item_prob[i] * penalty[i]
