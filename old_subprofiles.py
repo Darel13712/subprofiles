@@ -29,13 +29,10 @@ def get_user_subprofiles(items, knn):
 
 
 
-def process_user(ui_matrix, user, knn, k, drop_old):
+def process_user(ui_matrix, user, knn):
     items = get_items(ui_matrix, user)
     subprofiles = get_user_subprofiles(items, knn)
-    if k is None:
-        return subprofiles
-    sp = new_item_subprofiles(subprofiles, knn, k, drop_old)
-    return sp
+    return subprofiles
 
 
 def new_item_subprofiles(subprofiles, knn, k, drop_old):
@@ -54,17 +51,11 @@ def collect_new_neighbors(knn, k, items, drop_old):
     return candidates
 
 
-def get_old_subprofiles(ui_matrix, knn, k=None, target='old'):
-    if target not in ['new', 'both', 'old']:
-        raise ValueError(f'target must be one of "old", "new", "both", got {target}')
-    if target != 'old' and k is None:
-        raise ValueError('k parameter must be provided if target != old')
-
-    drop_old = True if target == 'new' else False
+def get_old_subprofiles(ui_matrix, knn):
     users = np.unique(ui_matrix.nonzero()[0])
     with Pool(cpu_count()) as p:
         subprofiles = p.starmap(
             process_user,
-            [(ui_matrix, user, knn, k, drop_old) for user in users],
+            [(ui_matrix, user, knn) for user in users],
         )
         return dict(zip(users, subprofiles))

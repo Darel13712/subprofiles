@@ -53,23 +53,23 @@ def get_subprofiles(ui_matrix, knn, threshold=0.5):
         return dict(zip(users, res))
 
 
-def rerank(items, scores, subprofiles, k, lmbd=0.5):
+def rerank(items, scores, subprofiles, k, knn, lmbd=0.5):
     users = items.keys()
     with Pool(cpu_count()) as p:
         res = p.starmap(
             user_ranking,
-            [(items[user], scores[user], subprofiles[user], k, lmbd) for user in users],
+            [(items[user], scores[user], subprofiles[user], k, knn, lmbd) for user in users],
         )
     return dict(zip(users, res))
 
 
-def user_ranking(items, scores, subprofiles, k, lmbd):
+def user_ranking(items, scores, subprofiles, k, knn, lmbd):
     scores = list(scores)
     subprofile_prob = np.array([len(sp) for sp in subprofiles])
     subprofile_prob = subprofile_prob / subprofile_prob.sum()
 
     items = pd.Series(items)
-    item_prob_den = np.array([sum(items.isin(sp) * scores) for sp in subprofiles])
+    item_prob_den = np.array([sum(items.isin(neighborhood(sp, knn)) * scores) for sp in subprofiles])
     items = list(items)
     not_from_subprofiles = item_prob_den == 0
     if not_from_subprofiles.any():
@@ -80,7 +80,7 @@ def user_ranking(items, scores, subprofiles, k, lmbd):
     for i in range(k):
         obj = [
             (1 - lmbd) * score + lmbd * diversity(
-                item, penalty, subprofiles, subprofile_prob, score / item_prob_den
+                item, penalty, subprofiles, subprofile_prob, score / item_prob_den, knn
             )
             for item, score in zip(items, scores)
         ]
@@ -88,16 +88,26 @@ def user_ranking(items, scores, subprofiles, k, lmbd):
         pick = items[pos]
         res.append(pick)
         for j, sp in enumerate(subprofiles):
-            if pick in sp:
-                penalty[j] *= 1 - scores[pos]*item_prob_den[j]
+            if pick in neighborhood(sp, knn):
+                penalty[j] *= 1 - scores[pos]/item_prob_den[j]
         items.pop(pos)
         scores.pop(pos)
     return res
 
 
-def diversity(item, penalty, subprofiles, subprofile_prob, item_prob):
+def diversity(item, penalty, subprofiles, subprofile_prob, item_prob, knn):
     div = 0 # что делатль с другими айтемами?
     for i, sp in enumerate(subprofiles):
-        if item in sp:
-            div += subprofile_prob[i] * item_prob[i] * penalty[i]
+        for sp_item in list(sp):
+            if item in knn[sp_item]:
+                div += subprofile_prob[i] * item_prob[i] * penalty[i]
+                break
     return div
+
+
+def neighborhood(sp, knn):
+    res = set()
+    for item in list(sp):
+        res |= set(knn[item]).union([item])
+    return res
+

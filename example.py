@@ -16,7 +16,7 @@ for version in ['1m']:
     df, ue, ie = encode(df)
     train, test = train_test_split(df, test_size=0.2, random_state=1, stratify=df['user_id'])
     # train, test = user_split(df, random_state=1337)
-    m = to_csc(df)
+    m = to_csc(train)
     knn = get_knn(m, 100, 'cosine')
 
     # start = time.time()
@@ -24,7 +24,7 @@ for version in ['1m']:
     # time_new = round(time.time() - start, 2)
 
     start = time.time()
-    op = get_old_subprofiles(m, knn, 70, target='new')
+    op = get_old_subprofiles(m, knn)
     time_old = round(time.time() - start, 2)
 
     pred = pd.read_csv(f'als_02_{version}.csv')
@@ -32,7 +32,7 @@ for version in ['1m']:
     pred = pandas_to_dict(pred)
     test = pandas_to_dict(test)
 
-    rerank_old = rerank(pred, score, op, 10)
+    rerank_old = rerank(pred, score, op, 10, knn)
     # rerank_new = rerank(pred, score, sp, 10)
 
     base_score = ndcg(test, pred)

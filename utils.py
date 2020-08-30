@@ -10,7 +10,7 @@ def to_csc(df):
     col_count = df.item_id.max() + 1
 
     return csc_matrix(
-        (df.rating, (df.user_id, df.item_id)), shape=(row_count, col_count),
+        (df['rating'], (df['user_id'], df['item_id'])), shape=(row_count, col_count),
     )
 
 
