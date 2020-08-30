@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from old_subprofiles import is_subset_of_any, get_user_knn, collect_new_neighbors
+from old_subprofiles import is_subset_of_any, collect_new_neighbors
 from subprofiles import merge_subprofiles, get_items
 from utils import to_csc
 
@@ -40,15 +40,6 @@ def test_is_subset_of_any():
 def test_get_items(matrix):
     items = get_items(matrix, 1)
     assert list(items) == [1, 2]
-
-
-def test_get_knn(matrix):
-    items = get_items(matrix, 1)
-    mm = matrix[:, items].T
-    knn = get_user_knn(items, mm, 2, 'cosine')
-    assert knn[1] == {1, 2}
-    assert knn[1] == knn[2]
-    assert len(knn) == 2
 
 
 def test_collect_new_neighbors():

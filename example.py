@@ -6,7 +6,8 @@ from rs_datasets import MovieLens
 from sklearn.model_selection import train_test_split
 
 from old_subprofiles import get_old_subprofiles
-from subprofiles import get_subprofiles, rerank
+from subprofiles import get_subprofiles
+from reranking import rerank
 from utils import to_csc, encode, get_knn, user_split
 
 res = pd.DataFrame()

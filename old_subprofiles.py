@@ -1,6 +1,5 @@
 import numpy as np
 from multiprocessing import Pool, cpu_count
-from sklearn.neighbors import NearestNeighbors
 
 
 def is_subset_of_any(s, subprofiles):
@@ -26,7 +25,6 @@ def get_user_subprofiles(items, knn):
         if not is_subset_of_any(s, subprofiles):
             subprofiles.append(s)
     return subprofiles
-
 
 
 def process_user(ui_matrix, user, knn):
