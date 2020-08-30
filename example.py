@@ -19,9 +19,9 @@ for version in ['1m']:
     m = to_csc(train)
     knn = get_knn(m, 100, 'cosine')
 
-    # start = time.time()
-    # sp = get_subprofiles(m, knn)
-    # time_new = round(time.time() - start, 2)
+    start = time.time()
+    sp = get_subprofiles(m, knn)
+    time_new = round(time.time() - start, 2)
 
     start = time.time()
     op = get_old_subprofiles(m, knn)
@@ -33,19 +33,19 @@ for version in ['1m']:
     test = pandas_to_dict(test)
 
     rerank_old = rerank(pred, score, op, 10, knn)
-    # rerank_new = rerank(pred, score, sp, 10)
+    rerank_new = rerank(pred, score, sp, 10)
 
     base_score = ndcg(test, pred)
     score_old = ndcg(test, rerank_old)
-    # score_new = ndcg(test, rerank_new)
+    score_new = ndcg(test, rerank_new)
 
     res = res.append(
         {
             'base ndcg@10': base_score,
             'old ndcg@10': score_old,
-            # 'new ndcg@10': score_new,
+            'new ndcg@10': score_new,
             'old time': time_old,
-            # 'new time': time_new,
+            'new time': time_new,
             'dataset': version,
         },
         ignore_index=True,
