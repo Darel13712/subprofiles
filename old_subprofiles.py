@@ -1,5 +1,8 @@
 import numpy as np
+import pandas as pd
 from multiprocessing import Pool, cpu_count
+
+from sklearn.cluster import MeanShift
 
 
 def is_subset_of_any(s, subprofiles):
@@ -11,6 +14,13 @@ def is_subset_of_any(s, subprofiles):
 
 def get_items(ui_matrix, user):
     return np.unique(ui_matrix[user].nonzero()[1])
+
+
+def add_neighbours(items, knn):
+    res = set(items)
+    for item in items:
+        res = res.union(set(knn[item]))
+    return list(res)
 
 
 def get_user_subprofiles(items, knn):
@@ -33,27 +43,29 @@ def process_user(ui_matrix, user, knn):
     return subprofiles
 
 
-def new_item_subprofiles(subprofiles, knn, k, drop_old):
-    res = [collect_new_neighbors(knn, k, list(sp), drop_old) for sp in subprofiles]
-    if drop_old:
-        res = [s for s in res if len(s) > 0]
-    return res
-
-
-def collect_new_neighbors(knn, k, items, drop_old):
-    candidates = set(items)
-    for item in items:
-        candidates |= set(list(knn[item])[:k])
-    if drop_old:
-        candidates -= set(items)
-    return candidates
-
-
 def get_old_subprofiles(ui_matrix, knn):
     users = np.unique(ui_matrix.nonzero()[0])
     with Pool(cpu_count()) as p:
         subprofiles = p.starmap(
             process_user,
             [(ui_matrix, user, knn) for user in users],
+        )
+        return dict(zip(users, subprofiles))
+
+
+def process_user_ms(ui_matrix, user, labels, clusters):
+    items = get_items(ui_matrix, user)
+    items = np.array(items)
+    cl = list(set([labels[item] for item in items]))
+    subprofiles = [set(clusters[c]) for c in cl]
+    return subprofiles
+
+
+def get_ms_subprofiles(ui_matrix, labels, clusters):
+    users = np.unique(ui_matrix.nonzero()[0])
+    with Pool(cpu_count()) as p:
+        subprofiles = p.starmap(
+            process_user_ms,
+            [(ui_matrix, user, labels, clusters) for user in users],
         )
         return dict(zip(users, subprofiles))
