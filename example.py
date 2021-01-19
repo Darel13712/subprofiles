@@ -11,8 +11,7 @@ from tqdm import tqdm
 import numpy as np
 
 from old_subprofiles import get_old_subprofiles, get_ms_subprofiles
-from subprofiles import get_subprofiles
-from reranking import rerank, neighborhood
+from reranking import rerank
 from utils import get_knn, user_split
 from rs_tools import to_csc, encode
 
